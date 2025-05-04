@@ -47,6 +47,10 @@ hive
 !connect jdbc:hive2://localhost:10000
 ```
 
+See this images where this is what you will see when you run the above code:
+
+![Alt](img2.png)
+
 ## Create Table and Load Data
 You can create an external table in Hive to load your data. Below is an example of how to create a table for taxi trip data and perform some basic data cleaning operations.
 
@@ -177,6 +181,8 @@ GROUP BY
     TO_DATE(lpep_pickup_datetime);
 ```
 
+![Alt](img1.png)
+
 ## Saving The Cleaned Data
 
 > I recommend you to read this section
@@ -217,6 +223,8 @@ SELECT
 FROM taxi_trips_cleaned LIMIT 1;
 ```
 
+![Alt](img3.png)
+
 Then open another bash terminal and run the following code to merge the header and data together:
 
 ```bash
@@ -224,5 +232,7 @@ Then open another bash terminal and run the following code to merge the header a
 docker exec -it hive-server bash
 cat /data2/csv_header/000000_0 /data2/csv_data/000000_0 > /data2/final_with_headers.csv
 ``` 
+
+![Alt](img4.png)
 
 Your exported data will be merged together with the header and saved in the final_with_headers.csv file.
