@@ -1,4 +1,5 @@
 # Hive Reference
+Updated codes 
 
 ## Create Table and Load Data
 You can create an external table in Hive to load your data. Below is an example of how to create a table for taxi trip data and perform some basic data cleaning operations.
@@ -45,6 +46,7 @@ DESCRIBE taxi_trips;
 ```
 
 ## Data Cleaning and Transformation
+Updated cleaning code by eliminating the negative values, and fix some bugs
 
 ```sql
 CREATE TABLE taxi_trips_cleaned AS
@@ -177,8 +179,6 @@ GROUP BY
 ![Alt](img1.png)
 
 ## Saving The Cleaned Data
-
-> I recommend you to read this section
 
 When you save data you data will not be saved together with the header so you need some tricks to save the header together with the data. You can use the following code on hive to save the data:
 
