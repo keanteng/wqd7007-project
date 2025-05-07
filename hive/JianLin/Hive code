@@ -3,7 +3,11 @@ SELECT
     VendorID,
     lpep_pickup_datetime,
     lpep_dropoff_datetime,
-    COALESCE(store_and_fwd_flag, 'N') AS store_and_fwd_flag,
+    -- Handle missing or empty store_and_fwd_flag values explicitly
+    CASE 
+        WHEN store_and_fwd_flag IS NULL OR store_and_fwd_flag = '' THEN 'N'
+        ELSE store_and_fwd_flag
+    END AS store_and_fwd_flag,
     RatecodeID,
     PULocationID,
     DOLocationID,
@@ -47,4 +51,3 @@ WHERE
     (improvement_surcharge >= 0 OR improvement_surcharge IS NULL) AND
     (total_amount >= 0 OR total_amount IS NULL) AND
     (congestion_surcharge >= 0 OR congestion_surcharge IS NULL);
-
