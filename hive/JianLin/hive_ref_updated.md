@@ -47,13 +47,16 @@ DESCRIBE taxi_trips;
 ## Data Cleaning and Transformation
 
 ```sql
--- Create a cleaned table with various data cleaning operations
 CREATE TABLE taxi_trips_cleaned AS
 SELECT 
     VendorID,
     lpep_pickup_datetime,
     lpep_dropoff_datetime,
-    COALESCE(store_and_fwd_flag, 'N') AS store_and_fwd_flag,
+    -- Handle missing or empty store_and_fwd_flag values explicitly
+    CASE 
+        WHEN store_and_fwd_flag IS NULL OR store_and_fwd_flag = '' THEN 'N'
+        ELSE store_and_fwd_flag
+    END AS store_and_fwd_flag,
     RatecodeID,
     PULocationID,
     DOLocationID,
@@ -62,7 +65,7 @@ SELECT
         WHEN passenger_count IS NULL OR passenger_count = 0 THEN 1
         ELSE passenger_count
     END AS passenger_count,
-    -- Filter out unreasonable trip distances (e.g., negative or excessively large)
+    -- Filter out unreasonable trip distances
     CASE
         WHEN trip_distance < 0 OR trip_distance > 100 THEN NULL
         ELSE trip_distance
@@ -74,7 +77,7 @@ SELECT
     COALESCE(tip_amount, 0) AS tip_amount,
     COALESCE(tolls_amount, 0) AS tolls_amount,
     -- Calculate trip duration in minutes
-    UNIX_TIMESTAMP(lpep_dropoff_datetime) - UNIX_TIMESTAMP(lpep_pickup_datetime) / 60 AS trip_duration_minutes,
+    (UNIX_TIMESTAMP(lpep_dropoff_datetime) - UNIX_TIMESTAMP(lpep_pickup_datetime)) / 60 AS trip_duration_minutes, 
     COALESCE(improvement_surcharge, 0) AS improvement_surcharge,
     COALESCE(total_amount, 0) AS total_amount,
     payment_type,
@@ -83,11 +86,20 @@ SELECT
 FROM 
     taxi_trips
 WHERE
-    -- Filter out records with missing key timestamps
+    -- Filter out missing timestamps or invalid trip duration
     lpep_pickup_datetime IS NOT NULL AND
     lpep_dropoff_datetime IS NOT NULL AND
-    -- Filter out records where drop-off time is earlier than pickup time
-    lpep_dropoff_datetime > lpep_pickup_datetime;
+    lpep_dropoff_datetime > lpep_pickup_datetime AND
+
+    -- Filter out negative values
+    (fare_amount >= 0 OR fare_amount IS NULL) AND
+    (extra >= 0 OR extra IS NULL) AND
+    (mta_tax >= 0 OR mta_tax IS NULL) AND
+    (tip_amount >= 0 OR tip_amount IS NULL) AND
+    (tolls_amount >= 0 OR tolls_amount IS NULL) AND
+    (improvement_surcharge >= 0 OR improvement_surcharge IS NULL) AND
+    (total_amount >= 0 OR total_amount IS NULL) AND
+    (congestion_surcharge >= 0 OR congestion_surcharge IS NULL);
 
 -- Identify potential data quality issues
 CREATE TABLE data_quality_issues AS
@@ -98,6 +110,16 @@ FROM
     taxi_trips
 WHERE
     lpep_dropoff_datetime <= lpep_pickup_datetime
+
+UNION ALL
+SELECT
+    'Null pickup or dropoff datetime' AS issue_type,
+    COUNT(*) AS record_count
+FROM
+    taxi_trips
+WHERE
+    lpep_pickup_datetime IS NULL OR lpep_dropoff_datetime IS NULL
+
 UNION ALL
 SELECT
     'Zero passengers' AS issue_type,
@@ -106,6 +128,7 @@ FROM
     taxi_trips
 WHERE
     passenger_count = 0
+
 UNION ALL
 SELECT
     'Negative trip distance' AS issue_type,
@@ -113,7 +136,25 @@ SELECT
 FROM
     taxi_trips
 WHERE
-    trip_distance < 0;
+    trip_distance < 0
+
+UNION ALL
+SELECT
+    'Negative fare amount' AS issue_type,
+    COUNT(*) AS record_count
+FROM
+    taxi_trips
+WHERE
+    fare_amount < 0
+
+UNION ALL
+SELECT
+    'Negative total amount' AS issue_type,
+    COUNT(*) AS record_count
+FROM
+    taxi_trips
+WHERE
+    total_amount < 0;
 
 -- Create a summary table with aggregated statistics by date
 CREATE TABLE trip_daily_summary AS
@@ -121,9 +162,12 @@ SELECT
     TO_DATE(lpep_pickup_datetime) AS trip_date,
     COUNT(*) AS total_trips,
     AVG(trip_distance) AS avg_distance,
-    AVG(UNIX_TIMESTAMP(lpep_dropoff_datetime) - UNIX_TIMESTAMP(lpep_pickup_datetime)) / 60 AS avg_duration_minutes,
+    MAX(trip_distance) AS max_distance,
+    AVG((UNIX_TIMESTAMP(lpep_dropoff_datetime) - UNIX_TIMESTAMP(lpep_pickup_datetime)) / 60) AS avg_duration_minutes,
     AVG(fare_amount) AS avg_fare,
-    SUM(total_amount) AS total_revenue
+    AVG(tip_amount) AS avg_tip,
+    SUM(total_amount) AS total_revenue,
+    COUNT(DISTINCT VendorID) AS active_vendors
 FROM
     taxi_trips_cleaned
 GROUP BY
@@ -145,7 +189,6 @@ ROW FORMAT DELIMITED
 FIELDS TERMINATED BY ',' 
 SELECT * FROM taxi_trips_cleaned;
 
--- Create a header file
 INSERT OVERWRITE DIRECTORY '/data2/csv_header'
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY ','
@@ -164,13 +207,13 @@ SELECT
   'mta_tax',
   'tip_amount',
   'tolls_amount',
+  'trip_duration_minutes',  -- ✅ this was missing
   'improvement_surcharge',
   'total_amount',
   'payment_type',
   'trip_type',
   'congestion_surcharge'
 FROM taxi_trips_cleaned LIMIT 1;
-```
 
 ![Alt](img3.png)
 
