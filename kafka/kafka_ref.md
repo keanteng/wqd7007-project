@@ -17,7 +17,7 @@ Thank you for choosing our taxi service!
 ## Demonstration
 Check out the video below to see how the producer and consumer work together to create a streaming data pipeline.
 
-<video src="kafka/kafka-demo.mp4" style="width: 100%; max-width: 720px; margin: 0 auto; display: block;" controls></video>
+![Demo](demo-kafka.gif)
 
 ## Configuration
 
