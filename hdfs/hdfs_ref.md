@@ -1,6 +1,11 @@
 # MapReduce Using Docker
 
-First of all, set up docker:
+## Prerequisites
+Make sure you download Docker on your machine. Then on your working directory, copy the `docker-compose.yml` file from this repository. Then continue with the steps below.
+
+## Guides
+
+Firstly, set up docker:
 
 ```bash
 docker-compose up
@@ -50,7 +55,7 @@ The output can be viewed at /output in this repository.
 
 ![Alt](img2.png)
 
-Make sure you use the link to check the resources consumption, memory, and CPU usage:
+Make sure you use the link to check the resource consumption, memory, and CPU usage:
 - http://127.0.0.1:9870/dfshealth.html#tab-datanode
 - http://127.0.0.1:8188/applicationhistory
 

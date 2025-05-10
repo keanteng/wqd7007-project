@@ -1,10 +1,9 @@
 # Running Pyspark
 
-> Change the file path to your local file path
-> Important !!!
+This code will make use of `pyspark` in a Jupyter Notebook.
 
 ```bash
-# frist of all get the images (1.6GB)
+# first of all get the images (1.6GB)
 # takes a few minutes to download
 docker pull quay.io/jupyter/pyspark-notebook
 
@@ -12,5 +11,6 @@ docker pull quay.io/jupyter/pyspark-notebook
 docker run -p 8888:8888 quay.io/jupyter/pyspark-notebook
 
 # if want to use local file
-docker run -p 8888:8888 -v c:/Users/Khor\ Kean\ Teng/Downloads/test:/home/jovyan/work quay.io/jupyter/pyspark-notebook
+docker run -p 8888:8888 -v "c:/Users/Khor Kean Teng/Downloads/MDS Git Sem 2/wqd7007-project/spark:/home/jovyan/work" quay.io/jupyter/pyspark-notebook
+# then a localhost link will be provided in the terminal to access the notebook
 ```
