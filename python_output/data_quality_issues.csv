@@ -1,0 +1,7 @@
+issue_type,record_count
+Invalid pickup/dropoff time,0
+Null pickup or dropoff datetime,0
+Zero passengers,0
+Negative trip distance,0
+Negative fare amount,0
+Negative total amount,0
